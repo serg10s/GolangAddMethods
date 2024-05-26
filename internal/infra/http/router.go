@@ -108,6 +108,14 @@ func TaskRouter(r chi.Router, tc controllers.TaskConroller) {
 			"/",
 			tc.Save(),
 		)
+		apiRouter.Get(
+			"/",
+			tc.Find(),
+		)
+		apiRouter.Put(
+			"/",
+			tc.Update(),
+		)
 	})
 }
 

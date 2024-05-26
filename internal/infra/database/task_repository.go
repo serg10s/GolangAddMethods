@@ -24,6 +24,7 @@ type task struct {
 type TaskRepository interface {
 	Save(t domain.Task) (domain.Task, error)
 	Find(t domain.Task, user_id int, status string, title string) ([]domain.Task, error)
+	Update(t domain.Task) (domain.Task, error) //not right 
 }
 
 type taskRepository struct {
@@ -33,7 +34,7 @@ type taskRepository struct {
 
 func NewTaskRepository(session db.Session) TaskRepository {
 	return taskRepository{
-		coll: session.Collection(TasksTableName),
+		coll: session.Collection(TasksTableName), // error: cannot use taskRepository{…} (value of type taskRepository)
 		sess: session,
 	}
 }
