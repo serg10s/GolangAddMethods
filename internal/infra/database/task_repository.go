@@ -23,8 +23,9 @@ type task struct {
 
 type TaskRepository interface {
 	Save(t domain.Task) (domain.Task, error)
-	Find(t domain.Task, user_id int, status string, title string) ([]domain.Task, error)
-	Update(t domain.Task) (domain.Task, error) //not right 
+	Find(id uint64) (domain.Task, error)
+	Update(t domain.Task) (domain.Task, error)
+	Delete(id uint64) error
 }
 
 type taskRepository struct {
@@ -34,7 +35,7 @@ type taskRepository struct {
 
 func NewTaskRepository(session db.Session) TaskRepository {
 	return taskRepository{
-		coll: session.Collection(TasksTableName), // error: cannot use taskRepository{…} (value of type taskRepository)
+		coll: session.Collection(TasksTableName), 
 		sess: session,
 	}
 }
@@ -51,26 +52,31 @@ func (r taskRepository) Save(t domain.Task) (domain.Task, error) {
 	return result, nil
 }
 
-func (r taskRepository) Find(id uint64) (interface{}, error) {
+func (t taskRepository) Find(id uint64) (domain.Task, error) {
 	var tsk task
-	// tsk := r.mapDomainToModel(t)
-	err := r.coll.Find(db.Cond{"id": id}).One(&tsk)
+	err := t.coll.Find(db.Cond{"id": id, "deleted_date": nil}).One(&tsk)
 	if err != nil {
 		return domain.Task{}, err
 	}
-
-	return r.mapModelToDomain(tsk), nil
+	o := t.mapModelToDomain(tsk)
+	return o, nil
 }
 
-func (r taskRepository) Update(t domain.Task) (domain.Task, error) {
-	tsk := r.mapDomainToModel(t)
+func (t taskRepository) Update(o domain.Task) (domain.Task, error) {
+	tsk := t.mapDomainToModel(o)
 	tsk.UpdatedDate = time.Now()
-	err := r.coll.Find(db.Cond{"id": tsk.Id, "deleted_date": nil}).Update(&tsk)
+	err := t.coll.Find(db.Cond{"id": tsk.Id, "deleted_date": nil}).Update(&tsk)
 	if err != nil {
 		return domain.Task{}, err
 	}
-	return r.mapModelToDomain(tsk), nil
+	o = t.mapModelToDomain(tsk)
+	return o, nil
 }
+
+func (t taskRepository) Delete(id uint64) error {
+	return t.coll.Find(db.Cond{"id": id, "deleted_date": nil}).Update(map[string]interface{}{"deleted_date": time.Now()})
+}
+
 
 func (r taskRepository) mapDomainToModel(t domain.Task) task {
 	return task{

@@ -116,6 +116,10 @@ func TaskRouter(r chi.Router, tc controllers.TaskConroller) {
 			"/",
 			tc.Update(),
 		)
+		apiRouter.Delete(
+			"/",
+			tc.Delete(),
+		)
 	})
 }
 

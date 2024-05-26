@@ -10,13 +10,15 @@ import (
 type TaskService interface {
 	Save(t domain.Task) (domain.Task, error)
 	Find(t domain.Task) domain.Task
+	Update(r domain.Task) (domain.Task, error)
+	Delete(id uint64) error
 }
 
 type taskService struct {
 	taskRepo database.TaskRepository
 }
 
-func NewTaskService(tr database.TaskRepository) TaskService {
+func NewTaskService(tr database.TaskRepository)  TaskService {
 	return taskService{
 		taskRepo: tr,
 	}
@@ -31,32 +33,34 @@ func (s taskService) Save(t domain.Task) (domain.Task, error) {
 	return task, nil
 }
 
-func (s taskService) Find(t domain.Task, userId int, status string, title string) ([]domain.Task, error) {
-	task, err := s.taskRepo.Find(t, userId, status, title)
+func (s taskService) Find(id uint64) (interface{}, error) {
+	tsk, err := s.taskRepo.Find(id)
 	if err != nil {
 		log.Printf("TaskService: %s", err)
-		return []domain.Task{}, err
+		return nil, err
 	}
-	return task, nil
+
+	return tsk, nil
 }
 
-func (s taskService) Update(t domain.Task) (domain.Task, error) {
-	task, err := s.taskRepo.Update(t)
+func (s taskService) Update(r domain.Task) (domain.Task, error) {
+	room, err := s.taskRepo.Update(r)
 	if err != nil {
-		log.Printf("UserService: %s", err)
+		log.Printf("TaskService: %s", err)
 		return domain.Task{}, err
 	}
 
-	return task, nil
+	return room, nil
 }
 
-// func (s userService) Delete(id uint64) error {
-// 	err := s.userRepo.Delete(id)
-// 	if err != nil {
-// 		log.Printf("UserService: %s", err)
-// 		return err
-// 	}
+func (s taskService) Delete(id uint64) error {
+	err := s.taskRepo.Delete(id)
+	if err != nil {
+		log.Printf("TaskService: %s", err)
+		return err
+	}
 
-	// return nil
-// }
+	return nil
+}
+
  

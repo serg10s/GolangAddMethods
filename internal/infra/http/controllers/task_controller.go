@@ -50,51 +50,26 @@ func (c TaskConroller) Find() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tsk := r.Context().Value(UserKey).(domain.Task)
 
-		// Получение параметров поиска из запроса
-		queryParams := r.URL.Query()
-		status := queryParams.Get("status")
-		title := queryParams.Get("title")
-
-		// Вызов метода поиска в сервисе задач
-		tasks, err := c.taskService.Find(tsk.Id, status, title)
-		if err != nil {
-			log.Printf("TaskController: %s", err)
-			InternalServerError(w, err)
-			return
-		}
-
-		var tasksDto []resources.TaskDto
-		for _, task := range tasks {
-			var tDto resources.TaskDto
-			tDto = tDto.DomainToDto(task)
-			tasksDto = append(tasksDto, tDto)
-		}
-
-		Success(w, tasksDto)
+		var orgDto resources.TaskDto
+		Success(w, orgDto.DomainToDto(tsk))
 	}
 }
 
 func (c TaskConroller) Update() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		tsk, err := requests.Bind(r, requests.UpdateUserRequest{}, domain.Task{})
-		if err != nil {
-			log.Printf("UserController: %s", err)
-			BadRequest(w, err)
-			return
-		}
+	return c.Update()
+}
 
-		t := r.Context().Value(UserKey).(domain.Task)
-		t.Description = tsk.Description
-		t.Title = tsk.Title
-		tsk, err = c.taskService.Update(t)
+func (c TaskConroller) Delete() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		tsk := r.Context().Value(UserKey).(domain.User)
+
+		err := c.taskService.Delete(tsk.Id)
 		if err != nil {
-			log.Printf("UserController: %s", err)
+			log.Printf("OrganizationController: %s", err)
 			InternalServerError(w, err)
 			return
 		}
 
-		var userDto resources.TaskDto
-		Success(w, userDto.DomainToDto(tsk))
+		Ok(w)
 	}
 }
-
